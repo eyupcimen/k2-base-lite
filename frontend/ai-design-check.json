@@ -1,0 +1,90 @@
+{
+  "spacing": {
+    "base": 4
+  },
+  "properNouns": [
+    "SpeakLens",
+    "ClaudeTerm",
+    "Claude Code",
+    "Codex",
+    "Gemini CLI",
+    "Copilot CLI",
+    "Run App",
+    "Feedback Kit",
+    "Cimen Design System",
+    "SF Symbols",
+    "Dynamic Type",
+    "App Store",
+    "TestFlight",
+    "Firebase",
+    "GitHub",
+    "iCloud",
+    "macOS",
+    "iOS",
+    "iPhone",
+    "iPad"
+  ],
+  "rules": {
+    "no-decorative-uppercase": "info"
+  },
+  "designSystem": {
+    "fonts": [
+      "Inter",
+      "SF Pro",
+      "SF Pro Text",
+      "SF Pro Display",
+      "SF Mono",
+      "New York",
+      "-apple-system",
+      "system-ui",
+      "ui-monospace",
+      "JetBrains Mono"
+    ],
+    "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      22,
+      28,
+      34
+    ],
+    "radii": [
+      6,
+      10,
+      16,
+      9999
+    ],
+    "colors": [
+      "#06201a",
+      "#0e7a64",
+      "#111312",
+      "#14302a",
+      "#171a19",
+      "#1a1d1c",
+      "#1f7a3a",
+      "#232726",
+      "#2e3331",
+      "#3cc4a5",
+      "#4cc77a",
+      "#5b625f",
+      "#6b7370",
+      "#838a87",
+      "#a15c00",
+      "#a3aba7",
+      "#c2342b",
+      "#c3781a",
+      "#dee0dd",
+      "#e3f2ee",
+      "#f0b44c",
+      "#f0f0ee",
+      "#f2a53d",
+      "#f2f3f2",
+      "#fafaf9",
+      "#ff6b60",
+      "#ffffff"
+    ]
+  }
+}

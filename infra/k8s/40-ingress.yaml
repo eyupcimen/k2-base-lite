@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: k2-base-lite
+  namespace: k2-base-lite
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: k2-base-lite.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: {name: backend, port: {number: 8000}}
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: frontend, port: {number: 80}}

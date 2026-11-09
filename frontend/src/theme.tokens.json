@@ -1,0 +1,45 @@
+{
+  "light": {
+    "surface-100": "#FAFAF9",
+    "surface-200": "#FFFFFF",
+    "surface-300": "#F0F0EE",
+    "border": "#DEE0DD",
+    "border-strong": "#838A87",
+    "ink": "#171A19",
+    "ink-muted": "#5B625F",
+    "brand": "#0E7A64",
+    "on-brand": "#FFFFFF",
+    "brand-tint": "#E3F2EE",
+    "accent": "#C3781A",
+    "focus": "#0E7A64",
+    "success": "#1F7A3A",
+    "warning": "#A15C00",
+    "danger": "#C2342B"
+  },
+  "dark": {
+    "surface-100": "#111312",
+    "surface-200": "#1A1D1C",
+    "surface-300": "#232726",
+    "border": "#2E3331",
+    "border-strong": "#6B7370",
+    "ink": "#F2F3F2",
+    "ink-muted": "#A3ABA7",
+    "brand": "#3CC4A5",
+    "on-brand": "#06201A",
+    "brand-tint": "#14302A",
+    "accent": "#F2A53D",
+    "focus": "#3CC4A5",
+    "success": "#4CC77A",
+    "warning": "#F0B44C",
+    "danger": "#FF6B60"
+  },
+  "scene": {
+    "pv-cell": "#1E3A6E",
+    "pv-frame": "#2B3138",
+    "rail-metal": "#C4CAD0",
+    "roof-tile": "#B9B2A6",
+    "grid-line": "#9AA19E",
+    "calib-marker": "#E8A317",
+    "house-wall": "#E4DED3"
+  }
+}

@@ -1,0 +1,6 @@
+Django==5.2.19
+djangorestframework==3.18.3
+django-cors-headers==4.9.0
+PyJWT[crypto]==2.15.1
+cryptography==50.0.2
+gunicorn==26.2.0
