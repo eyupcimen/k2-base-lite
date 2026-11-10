@@ -2,6 +2,8 @@
 
 A small, end-to-end PV mounting configurator: enter a panel grid and site parameters, see a 3D preview on a tilted roof, and get a bill of materials with a simplified load hint.
 
+**Live demo:** https://k2-base-lite.onrender.com (free tier: the API may need ~50 s to wake up)
+
 Built as a portfolio demo to show how I approach a full-stack product slice: Django API, React + 3D frontend, tests, CI/CD, containers, Kubernetes and written architecture decisions.
 
 > **Not affiliated with K2 Systems.** Item numbers are placeholders, and the load check is not a structural calculation. See [Limitations](#limitations).
