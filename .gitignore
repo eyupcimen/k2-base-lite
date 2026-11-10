@@ -29,3 +29,4 @@ coverage/
 
 # Private reference photos (never commit)
 ss/
+*.tsbuildinfo

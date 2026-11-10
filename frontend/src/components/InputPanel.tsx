@@ -2,12 +2,14 @@ import type { ChangeEvent } from 'react';
 import { LIMITS } from '../constants';
 import type { CalcInput } from '../lib/api';
 import type { RoofShape } from '../lib/gable';
+import AddressSearch from './AddressSearch';
+import type { GeoResult } from '../lib/api';
 
-interface Props { value: CalcInput; onChange: (v: CalcInput) => void; roof: RoofShape; onRoof: (r: RoofShape) => void; photoUrl: string | null; onPhoto: (url: string | null) => void; calibrated: boolean; onCalibrate: () => void }
+interface Props { value: CalcInput; onChange: (v: CalcInput) => void; roof: RoofShape; onRoof: (r: RoofShape) => void; photoUrl: string | null; onPhoto: (url: string | null) => void; calibrated: boolean; onCalibrate: () => void; onAddress: (r: GeoResult) => void; mapBusy: boolean; mapError: string | null }
 
 const clamp = (n: number, [lo, hi]: readonly [number, number]) => Math.min(hi, Math.max(lo, Math.round(n || lo)));
 
-export default function InputPanel({ value, onChange, roof, onRoof, photoUrl, onPhoto, calibrated, onCalibrate }: Props) {
+export default function InputPanel({ value, onChange, roof, onRoof, photoUrl, onPhoto, calibrated, onCalibrate, onAddress, mapBusy, mapError }: Props) {
   const set = (patch: Partial<CalcInput>) => onChange({ ...value, ...patch });
   const setRoof = (patch: Partial<RoofShape>) => onRoof({ ...roof, ...patch });
   const onFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -79,8 +81,10 @@ export default function InputPanel({ value, onChange, roof, onRoof, photoUrl, on
         </select>
       </label>
       <h2>Roof photo</h2>
+      <AddressSearch onPick={onAddress} busy={mapBusy} />
+      {mapError && <p className="alert alert-danger">{mapError}</p>}
       <label className="field">
-        <span>Satellite screenshot (any rotation or zoom)</span>
+        <span>Or upload a satellite screenshot (any rotation or zoom, needs one edge length)</span>
         <input type="file" accept="image/*" onChange={onFile} />
       </label>
       {photoUrl && (

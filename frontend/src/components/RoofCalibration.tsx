@@ -2,11 +2,14 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { rectify, roofDims, suggestLayout, type Pt } from '../lib/homography';
 import { fromRotated, rotatedSize, splitRotation, straightenRotation, toRotated } from '../lib/rotate';
 import { gableDims, type RoofShape } from '../lib/gable';
+import { MAP_ATTRIBUTION, type MapScale } from '../lib/mapImage';
 
 export interface RoofCalib { textureUrl: string; width: number; depth: number }
 
 interface Props {
   photoUrl: string; tilt: number; roof: RoofShape;
+  /** Known ground scale (address search): no meters input, edge length = pixels x m/px. */
+  scale?: MapScale | null;
   onDone: (c: RoofCalib) => void; onCancel: () => void;
   onApply: (rows: number, cols: number) => void;
 }
@@ -15,14 +18,14 @@ const MAX_TEX = 1024;
 const LABELS = ['Ridge left', 'Ridge right', 'Eave right', 'Eave left'];
 const GABLE_LABELS = ['Top-left', 'Top-right', 'Bottom-right', 'Bottom-left'];
 
-export default function RoofCalibration({ photoUrl, tilt, roof, onDone, onCancel, onApply }: Props) {
+export default function RoofCalibration({ photoUrl, scale, tilt, roof, onDone, onCancel, onApply }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [src, setSrc] = useState<HTMLImageElement | null>(null);
   const [quarter, setQuarter] = useState(0);
   const [fine, setFine] = useState(0);
   const [straighten, setStraighten] = useState<Pt[] | null>(null);
   /** Corners in ORIGINAL image coordinates, so they survive rotation changes. */
-  const [orig, setOrig] = useState<Pt[]>([]);
+  const [orig, setOrig] = useState<Pt[]>(() => scale?.corners ?? []);
   const [drag, setDrag] = useState<number | null>(null);
   const [meters, setMeters] = useState(10);
   const [error, setError] = useState<string | null>(null);
@@ -66,8 +69,11 @@ export default function RoofCalibration({ photoUrl, tilt, roof, onDone, onCancel
   };
   const onMove = (e: PointerEvent) => { if (drag !== null) setOrig(orig.map((p, i) => (i === drag ? toOrig(e) : p))); };
 
-  const ready = pts.length === 4 && meters > 0;
-  const dims = ready ? roofDims(pts, meters) : null;
+  const d = (a: Pt, b: Pt) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  // Rotation preserves scale, so m/px holds in the rotated canvas too. Average edges 1→2 and 4→3 like roofDims.
+  const edgeM = scale ? (pts.length === 4 ? ((d(pts[0], pts[1]) + d(pts[3], pts[2])) / 2) * scale.mpp : 0) : meters;
+  const ready = pts.length === 4 && edgeM > 0;
+  const dims = ready ? roofDims(pts, edgeM) : null;
   const gable = dims && roof.type === 'gable' ? gableDims(dims.width, dims.depth, roof.ridge, tilt) : null;
   const fit = dims ? (gable ? suggestLayout(gable.ridgeLen, gable.half, tilt) : suggestLayout(dims.width, dims.depth, tilt)) : null;
   const pct = (p: Pt) => ({ left: `${(p[0] / cw) * 100}%`, top: `${(p[1] / ch) * 100}%` });
@@ -112,12 +118,18 @@ export default function RoofCalibration({ photoUrl, tilt, roof, onDone, onCancel
               onPointerDown={(e) => { e.stopPropagation(); (e.target as Element).setPointerCapture?.(e.pointerId); setDrag(i); }}>{i + 1}</button>
           ))}
         </div>
+        {scale && <p className="addr-attrib">{MAP_ATTRIBUTION.join(' · ')}</p>}
         <div className="field-row">
-          <label className="field">
-            <span>Edge 1→2 length (m)</span>
-            <input type="number" min={1} step={0.1} value={meters} onChange={(e) => setMeters(+e.target.value)} />
-          </label>
+          {scale ? (
+            <p className="hint">Known scale (zoom {scale.zoom}, <span className="mono">{scale.mpp.toFixed(3)} m/px</span>){pts.length === 4 ? <>: edge 1→2 <b className="mono">{edgeM.toFixed(2)} m</b></> : null}.{scale.corners ? ' Corners pre-placed from the OpenStreetMap footprint: drag to adjust.' : ''}</p>
+          ) : (
+            <label className="field">
+              <span>Edge 1→2 length (m)</span>
+              <input type="number" min={1} step={0.1} value={meters} onChange={(e) => setMeters(+e.target.value)} />
+            </label>
+          )}
           <button type="button" className="btn-secondary" onClick={() => setOrig([])}>Reset points</button>
+          {scale?.corners && <button type="button" className="btn-secondary" onClick={() => setOrig(scale.corners!)}>Footprint corners</button>}
         </div>
         {dims && fit && (
           <div className="calib-result">

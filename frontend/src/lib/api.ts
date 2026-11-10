@@ -22,3 +22,20 @@ export async function calculate(input: CalcInput, signal?: AbortSignal): Promise
   if (!res.ok) throw new ApiError(`Server error (${res.status})`);
   return res.json();
 }
+
+export interface GeoResult { label: string; lat: number; lon: number }
+
+export async function geocode(q: string, signal?: AbortSignal): Promise<GeoResult[]> {
+  const res = await fetch(`/api/geocode/?q=${encodeURIComponent(q)}`, { signal });
+  if (res.status === 400) throw new ApiError(formatApiErrors(await res.json().catch(() => null)));
+  if (!res.ok) throw new ApiError(`Address search failed (${res.status})`);
+  return res.json();
+}
+
+/** Building outline [[lat, lon], ...] or null when none was found. */
+export async function footprint(lat: number, lon: number, signal?: AbortSignal): Promise<[number, number][] | null> {
+  const res = await fetch(`/api/footprint/?lat=${lat}&lon=${lon}`, { signal });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ApiError(`Footprint lookup failed (${res.status})`);
+  return (await res.json()).polygon;
+}

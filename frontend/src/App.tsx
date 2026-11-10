@@ -4,7 +4,8 @@ import ResultsPanel from './components/ResultsPanel';
 import RoofScene from './components/RoofScene';
 import RoofCalibration, { type RoofCalib } from './components/RoofCalibration';
 import { useCalculation } from './lib/useCalculation';
-import type { CalcInput } from './lib/api';
+import type { CalcInput, GeoResult } from './lib/api';
+import { loadMapImage, type MapScale } from './lib/mapImage';
 import { DEFAULT_ROOF, slopeSize, type RoofShape } from './lib/gable';
 import { adjacentSpot, autoFill, computeRuns, defaultArea, gridFill, newId, OBSTACLE_MARGIN_M, type Obstacle, type Panel, type Rect } from './lib/layout';
 import type { EditMode } from './components/SlopeEditor';
@@ -23,6 +24,9 @@ export default function App() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [calib, setCalib] = useState<RoofCalib | null>(null);
   const [calibrating, setCalibrating] = useState(false);
+  const [mapScale, setMapScale] = useState<MapScale | null>(null);
+  const [mapBusy, setMapBusy] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
   const [mode, setMode] = useState<EditMode>('panels');
   const [snap, setSnap] = useState(true);
   const [panels, setPanels] = useState<Panel[]>([]);
@@ -44,7 +48,16 @@ export default function App() {
   useEffect(() => { setPanels(gridFill(input.rows, input.cols, ctx)); }, [input.rows, input.cols]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (pendingFill.current) { pendingFill.current = false; setPanels(autoFill(ctx)); } }, [ctx]);
   useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
-  const onPhoto = (url: string | null) => { setPhotoUrl(url); setCalib(null); setCalibrating(!!url); };
+  const onPhoto = (url: string | null, scale: MapScale | null = null) => { setPhotoUrl(url); setMapScale(scale); setCalib(null); setCalibrating(!!url); };
+  const onAddress = async (r: GeoResult) => {
+    setMapBusy(true); setMapError(null);
+    try {
+      const m = await loadMapImage(r.lat, r.lon);
+      if (m.scale.azimuth !== undefined) setRoof((x) => ({ ...x, azimuth: m.scale.azimuth! }));
+      onPhoto(m.url, m.scale);
+    } catch { setMapError('Satellite image could not be loaded. Try again or upload a screenshot.'); }
+    finally { setMapBusy(false); }
+  };
 
   const fill = () => { setPanels(autoFill(ctx)); setSelected(new Set()); };
   const addPanel = () => { const p = adjacentSpot(panels, ctx, [...selected].pop()); if (p) setPanels([...panels, { id: newId(), ...p }]); };
@@ -73,7 +86,8 @@ export default function App() {
         <span className="app-sub">PV roof layout and BOM configurator (demo)</span>
       </header>
       <main className="layout">
-        <InputPanel value={input} onChange={setInput} roof={roof} onRoof={setRoof} photoUrl={photoUrl} onPhoto={onPhoto} calibrated={!!calib} onCalibrate={() => setCalibrating(true)} />
+        <InputPanel value={input} onChange={setInput} roof={roof} onRoof={setRoof} photoUrl={photoUrl} onPhoto={onPhoto} calibrated={!!calib} onCalibrate={() => setCalibrating(true)}
+          onAddress={onAddress} mapBusy={mapBusy} mapError={mapError} />
         <section className="scene card" aria-label="3D roof layout">
           <div className="scene-toolbar">
             <div className="segmented" role="tablist" aria-label="Edit mode">
@@ -116,7 +130,7 @@ export default function App() {
         <ResultsPanel {...calc} />
       </main>
       {calibrating && photoUrl && (
-        <RoofCalibration photoUrl={photoUrl} tilt={input.roof_tilt} roof={roof}
+        <RoofCalibration photoUrl={photoUrl} scale={mapScale} tilt={input.roof_tilt} roof={roof}
           onApply={() => { pendingFill.current = true; }}
           onDone={(c) => {
             const ridge = c.width >= c.depth ? '12' : '23';
