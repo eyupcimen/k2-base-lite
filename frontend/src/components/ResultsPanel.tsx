@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { CalcResult } from '../lib/api';
 import { downloadCsv } from '../lib/csv';
 
@@ -7,6 +8,13 @@ const DISCLAIMER = 'Simplified estimate, not a certified structural calculation 
 const fmt = (n: number, d = 1) => n.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d });
 
 export default function ResultsPanel({ data, loading, error }: Props) {
+  // Free hosting sleeps the API; a slow first request means it is waking up.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!loading) { setSlow(false); return; }
+    const t = setTimeout(() => setSlow(true), 3000);
+    return () => clearTimeout(t);
+  }, [loading]);
   const kpis = data ? [
     ['Panels', String(data.total_panels)],
     ['Power', `${fmt(data.total_power_kwp, 2)} kWp`],
@@ -19,7 +27,7 @@ export default function ResultsPanel({ data, loading, error }: Props) {
     <aside className="card panel results" aria-label="Results" aria-busy={loading}>
       <div className="results-head">
         <h2>Results</h2>
-        <span className="status-line" role="status">{loading ? 'Calculating…' : data ? 'Up to date' : ''}</span>
+        <span className="status-line" role="status">{loading ? (slow ? 'Waking up the demo API (up to ~50 s)…' : 'Calculating…') : data ? 'Up to date' : ''}</span>
       </div>
       {error && <p className="alert alert-danger" role="alert"><strong>Error.</strong> {error}</p>}
       {data && (
