@@ -6,10 +6,10 @@ import RoofCalibration, { type RoofCalib } from './components/RoofCalibration';
 import { useCalculation } from './lib/useCalculation';
 import type { CalcInput } from './lib/api';
 import { DEFAULT_ROOF, slopeSize, type RoofShape } from './lib/gable';
-import { autoFill, computeRuns, defaultArea, firstFreeSpot, gridFill, newId, OBSTACLE_MARGIN_M, type Obstacle, type Panel, type Rect } from './lib/layout';
+import { adjacentSpot, autoFill, computeRuns, defaultArea, gridFill, newId, OBSTACLE_MARGIN_M, type Obstacle, type Panel, type Rect } from './lib/layout';
 import type { EditMode } from './components/SlopeEditor';
 
-const DEFAULTS: CalcInput = { rows: 2, cols: 6, roof_tilt: 30, wind_zone: 2, snow_zone: 1 };
+const DEFAULTS: CalcInput = { rows: 2, cols: 2, roof_tilt: 30, wind_zone: 2, snow_zone: 1 };
 
 const MODES: { id: EditMode; label: string; hint: string }[] = [
   { id: 'panels', label: 'Panels', hint: 'Drag a panel to move it (snaps to neighbours). Shift+click to multi-select. Red = invalid, reverts on drop.' },
@@ -47,7 +47,7 @@ export default function App() {
   const onPhoto = (url: string | null) => { setPhotoUrl(url); setCalib(null); setCalibrating(!!url); };
 
   const fill = () => { setPanels(autoFill(ctx)); setSelected(new Set()); };
-  const addPanel = () => { const p = firstFreeSpot(panels, ctx); if (p) setPanels([...panels, { id: newId(), ...p }]); };
+  const addPanel = () => { const p = adjacentSpot(panels, ctx, [...selected].pop()); if (p) setPanels([...panels, { id: newId(), ...p }]); };
   const clear = () => { setPanels([]); setSelected(new Set()); };
   const deleteSelected = useCallback(() => {
     if (mode === 'obstacles' && selOb) { setObstacles((o) => o.filter((x) => x.id !== selOb)); setSelOb(null); return; }

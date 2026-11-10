@@ -26,3 +26,6 @@ coverage/
 .DS_Store
 .idea/
 .vscode/
+
+# Private reference photos (never commit)
+ss/

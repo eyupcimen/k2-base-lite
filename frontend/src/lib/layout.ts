@@ -117,6 +117,22 @@ export function firstFreeSpot(panels: Panel[], ctx: Ctx, step = GRID_M): { u: nu
   return null;
 }
 
+/** Next spot beside existing panels: right, then left of the anchor (default: newest panel), then of any panel, then above/below. */
+export function adjacentSpot(panels: Panel[], ctx: Ctx, anchorId?: string): { u: number; v: number } | null {
+  if (!panels.length) return firstFreeSpot(panels, ctx);
+  const anchor = panels.find((p) => p.id === anchorId) ?? panels[panels.length - 1];
+  const order = [anchor, ...panels.filter((p) => p !== anchor)];
+  const sides = (q: Panel) => [{ u: q.u + PITCH_U, v: q.v }, { u: q.u - PITCH_U, v: q.v }];
+  const vertical = (q: Panel) => [{ u: q.u, v: q.v + PITCH_V }, { u: q.u, v: q.v - PITCH_V }];
+  for (const gen of [sides, vertical])
+    for (const q of order)
+      for (const c of gen(q)) {
+        const p = { u: round(c.u), v: round(c.v) };
+        if (isValid(p, panels, ctx)) return p;
+      }
+  return firstFreeSpot(panels, ctx);
+}
+
 export const runLength = (n: number) => n * PANEL_WIDTH_M + (n - 1) * PANEL_GAP_M + 2 * RAIL_OVERHANG_M;
 
 /** Runs = same v (±0.01) and contiguous along u with the standard gap; split at MAX_RUN. */

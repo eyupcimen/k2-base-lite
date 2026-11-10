@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  autoFill, computeRuns, defaultArea, firstFreeSpot, gridFill, insideArea, isValid, moveAreaEdge, overlaps,
+  adjacentSpot, autoFill, computeRuns, defaultArea, firstFreeSpot, gridFill, insideArea, isValid, moveAreaEdge, overlaps,
   panelRect, runLength, runRails, snapPanel, type Ctx, type Panel,
 } from './layout';
 
@@ -155,5 +155,15 @@ describe('moveAreaEdge', () => {
     expect(moveAreaEdge(area, 'u0', -9, slope).u0).toBe(-6);
     expect(moveAreaEdge(area, 'u1', -4.9, slope).u1).toBe(-4.5);
     expect(moveAreaEdge(area, 'v1', 3, slope).v1).toBe(3);
+  });
+});
+
+describe('adjacentSpot', () => {
+  const ctx = { area: { u0: -5, u1: 5, v0: 0, v1: 6 }, obstacles: [], margin: 0 };
+  it('adds to the right of the newest panel, then the left', () => {
+    const a = { id: 'a', u: 0, v: 2 };
+    expect(adjacentSpot([a], ctx)).toEqual({ u: PU, v: 2 });
+    const wall = { area: { ...ctx.area, u1: PU / 2 + 0.01 }, obstacles: [], margin: 0 };
+    expect(adjacentSpot([a], wall)).toEqual({ u: -PU, v: 2 });
   });
 });
