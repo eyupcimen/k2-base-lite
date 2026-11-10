@@ -17,9 +17,27 @@ const loadTile = (url: string) => new Promise<HTMLImageElement>((ok, fail) => {
   img.src = url;
 });
 
+/** Esri serves a flat grey "Map data not yet available" tile where a zoom level has no imagery. */
+function isPlaceholder(img: HTMLImageElement) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 32;
+  const ctx = c.getContext('2d')!;
+  ctx.drawImage(img, 0, 0, 32, 32);
+  const d = ctx.getImageData(0, 0, 32, 32).data;
+  let sum = 0, sq = 0, sat = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    const g = (d[i] + d[i + 1] + d[i + 2]) / 3;
+    sum += g; sq += g * g;
+    sat += Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]);
+  }
+  const n = d.length / 4, mean = sum / n, sd = Math.sqrt(sq / n - mean * mean);
+  return sd < 12 && sat / n < 6;
+}
+
 async function stitch(lat: number, lon: number, z: number) {
   const r = tileRange(lat, lon, z);
   const imgs = await Promise.all(r.tiles.map((t) => loadTile(ESRI_TILE(z, t.x, t.y))));
+  if (imgs.filter(isPlaceholder).length > imgs.length / 2) throw new Error(`No imagery at zoom ${z}`);
   const c = document.createElement('canvas');
   c.width = c.height = r.n * TILE_PX;
   const ctx = c.getContext('2d')!;
@@ -29,10 +47,12 @@ async function stitch(lat: number, lon: number, z: number) {
   return { url: URL.createObjectURL(blob), origin: r.origin };
 }
 
-/** Stitch a 4x4 Esri tile block at z20 (fallback z19) and pre-place corners from the OSM footprint. */
+/** Stitch a 4x4 Esri tile block at the deepest zoom with real imagery (z20 down to z17) and pre-place corners from the OSM footprint. */
 export async function loadMapImage(lat: number, lon: number): Promise<{ url: string; scale: MapScale }> {
   let z = 20, img;
-  try { img = await stitch(lat, lon, z); } catch { z = 19; img = await stitch(lat, lon, z); }
+  for (;;) {
+    try { img = await stitch(lat, lon, z); break; } catch (e) { if (--z < 17) throw e; }
+  }
   const scale: MapScale = { mpp: metersPerPixel(lat, z), zoom: z };
   try {
     const poly = await footprint(lat, lon);
