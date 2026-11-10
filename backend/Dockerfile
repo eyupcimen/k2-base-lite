@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt \
 COPY --chown=app:app . .
 USER app
 EXPOSE 8000
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2"]
+CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2"]
